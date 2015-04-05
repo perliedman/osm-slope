@@ -1,7 +1,7 @@
 OSM Slope
 =========
 
-Calculate slope (climb and descent) for highway ways in OSM data.
+Calculate slope (climb and descent) for highway ways in OpenStreetMap data.
 
 OSM Slope offers reasonable performance. Processing all of Sweden (825k highway ways)
 takes 150 seconds on my pretty old laptop.
