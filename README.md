@@ -11,7 +11,7 @@ takes 150 seconds on my pretty old laptop.
 Currently designed to be used as a commandline tool.
 
 ```
-node index.js [--cache-dir &lt;DIR&gt;] &lt;INPUT&gt; &lt;OUTPUT&gt;
+node index.js [--cache-dir <DIR>] <IN>; <OUT>;
 ```
 
 where `INPUT` is an OpenStreetMap `.osm.xml` or `.osm.pbf` file. Output
