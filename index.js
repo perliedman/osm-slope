@@ -19,37 +19,38 @@ handler.on('way', function(way) {
             coords = way.node_coordinates()
                     .map(function(c) { return { lat: c.lat, lng: c.lon }; });
         tasks.push(function(cb) {
-            var lastCoord,
-                lastElevation,
-                wait,
+            var wait,
                 createWayInfo = function() {
                     var wayInfo = coords.reduce(function(a, c) {
-                        var d;
+                        var data = a.data,
+                            d;
 
-                        if (lastCoord) {
-                            d = haversine(lastCoord, c);
-                            if (c.elevation > lastElevation) {
-                                a.climb += c.elevation - lastElevation;
-                                a.climbDistance += d;
+                        if (a.lastCoord) {
+                            d = haversine(a.lastCoord, c);
+                            if (c.elevation > a.lastElevation) {
+                                data.climb += c.elevation - a.lastElevation;
+                                data.climbDistance += d;
                             } else {
-                                a.descent += lastElevation - c.elevation;
-                                a.descentDistance += d;
+                                data.descent += a.lastElevation - c.elevation;
+                                data.descentDistance += d;
                             }
 
-                            a.distance += d;
+                            data.distance += d;
                         }
 
-                        lastElevation = c.elevation;
-                        lastCoord = c;
+                        a.lastElevation = c.elevation;
+                        a.lastCoord = c;
 
                         return a;
                     }, {
-                        distance: 0,
-                        climbDistance: 0,
-                        descentDistance: 0,
-                        climb: 0,
-                        descent: 0
-                    });
+                        data: {
+                            distance: 0,
+                            climbDistance: 0,
+                            descentDistance: 0,
+                            climb: 0,
+                            descent: 0
+                        }
+                    }).data;
 
                     wayinfoMap[wayId] = wayInfo;
                     setImmediate(function() {
