@@ -1,6 +1,6 @@
 {
   "name": "osm-slope",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Calculate way (highway, in particular) climb and descent from OpenStreetMap data",
   "homepage": "https://github.com/perliedman/osm-slope",
   "repository": {
