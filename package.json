@@ -2,6 +2,11 @@
   "name": "osm-slope",
   "version": "1.0.0",
   "description": "Calculate way (highway, in particular) climb and descent from OpenStreetMap data",
+  "homepage": "https://github.com/perliedman/osm-slope",
+  "repository": {
+    "type": "git",
+    "https://github.com/perliedman/osm-slope.git"
+  },
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
