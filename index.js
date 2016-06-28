@@ -15,9 +15,14 @@ var fs = require('fs'),
 
 handler.on('way', function(way) {
     if (way.tags('highway')) {
-        var wayId = way.id,
-            coords = way.node_coordinates()
-                    .map(function(c) { return { lat: c.lat, lng: c.lon }; });
+        try {
+            var wayId = way.id,
+                coords = way.node_coordinates()
+                        .map(function(c) { return { lat: c.lat, lng: c.lon }; });
+        } catch (e) {
+            console.warn(e);
+            return;
+        }
         tasks.push(function(cb) {
             var wait,
                 createWayInfo = function() {
