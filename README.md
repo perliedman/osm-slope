@@ -1,6 +1,8 @@
 OSM Slope
 =========
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/perliedman/osm-slope.svg)](https://greenkeeper.io/)
+
 Calculate slope (climb and descent) for highway ways in OpenStreetMap data.
 
 OSM Slope offers reasonable performance. Processing all of Sweden (825k highway ways)
