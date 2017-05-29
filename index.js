@@ -13,6 +13,60 @@ var fs = require('fs'),
     completed = 0,
     tasks;
 
+var fillNodeElevations = function (coords, cb) {
+    var wait = coords.length;
+
+    coords.forEach(function(c) {
+        tileSet.getElevation(c, function(err, elevation) {
+            if (!err) {
+                c.elevation = elevation;
+                wait--;
+            } else {
+                cb(err);
+                return;
+            }
+
+            if (wait === 0) {
+                cb(null, coords);
+            }
+        });
+    });
+};
+
+var createWayInfo = function (coords, cb) {
+    var wayInfo = coords.reduce(function(a, c) {
+        var data = a.data,
+            d;
+
+        if (a.lastCoord) {
+            d = haversine(a.lastCoord, c);
+            if (c.elevation > a.lastElevation) {
+                data.climb += c.elevation - a.lastElevation;
+                data.climbDistance += d;
+            } else {
+                data.descent += a.lastElevation - c.elevation;
+                data.descentDistance += d;
+            }
+
+            data.distance += d;
+        }
+
+        a.lastElevation = c.elevation;
+        a.lastCoord = c;
+
+        return a;
+    }, {
+        data: {
+            distance: 0,
+            climbDistance: 0,
+            descentDistance: 0,
+            climb: 0,
+            descent: 0
+        }
+    }).data;
+    cb(null, wayInfo);
+};
+
 handler.on('way', function(way) {
     if (way.tags('highway')) {
         try {
@@ -24,89 +78,42 @@ handler.on('way', function(way) {
             return;
         }
         tasks.push(function(cb) {
-            var wait,
-                createWayInfo = function() {
-                    var wayInfo = coords.reduce(function(a, c) {
-                        var data = a.data,
-                            d;
-
-                        if (a.lastCoord) {
-                            d = haversine(a.lastCoord, c);
-                            if (c.elevation > a.lastElevation) {
-                                data.climb += c.elevation - a.lastElevation;
-                                data.climbDistance += d;
-                            } else {
-                                data.descent += a.lastElevation - c.elevation;
-                                data.descentDistance += d;
-                            }
-
-                            data.distance += d;
-                        }
-
-                        a.lastElevation = c.elevation;
-                        a.lastCoord = c;
-
-                        return a;
-                    }, {
-                        data: {
-                            distance: 0,
-                            climbDistance: 0,
-                            descentDistance: 0,
-                            climb: 0,
-                            descent: 0
-                        }
-                    }).data;
-
+            async.waterfall([
+                fillNodeElevations.bind(this, coords),
+                createWayInfo], function(err, wayInfo) {
+                    if (err) {
+                        return cb(err);
+                    }
+                    console.log(wayId);
                     wayinfoMap[wayId] = wayInfo;
-                    setImmediate(function() {
-                        cb(undefined, wayInfo);
-                    });
-                };
-
-            wait = coords.length;
-
-            coords.forEach(function(c) {
-                tileSet.getElevation(c, function(err, elevation) {
-                    if (!err) {
-                        c.elevation = elevation;
-                        wait--;
-                    } else {
-                        console.log(err);
-                        cb(err);
-                        return;
-                    }
-
-                    if (wait === 0) {
-                        createWayInfo();
-                    }
+                    cb(undefined, wayInfo);
                 });
-            });
         });
     }
 });
 
-function next() {
+tasks = [];
+function nextRead(cb) {
     var buffer = reader.read();
-    tasks = [];
 
     if (buffer) {
         osmium.apply(buffer, locationHandler, handler);
-        async.series(tasks, function(err) {
-            if (!err) {
-                completed += tasks.length;
-                if (tasks.length) {
-                    console.log(completed);
-                }
-                setImmediate(function() {
-                    next();
-                });
-            } else {
-                console.log(err);
-            }
-        });
+        setImmediate(function () { nextRead(cb); });
     } else {
-        fs.writeFileSync(argv._[1], JSON.stringify(wayinfoMap));
+        cb();
     }
 }
 
-next();
+
+nextRead(function () {
+    console.log('Read', tasks.length, ' ways');
+    async.parallelLimit(tasks, 4, function(err) {
+        if (!err) {
+            fs.writeFileSync(argv._[1], JSON.stringify(wayinfoMap));
+        } else {
+            console.error(err);
+        }
+    });
+});
+
+
