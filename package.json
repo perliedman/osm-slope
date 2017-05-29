@@ -25,6 +25,7 @@
     "async": "^0.9.0",
     "minimist": "^1.1.1",
     "node-hgt": "^1.0.2",
+    "node-status": "^1.0.0",
     "osmium": "^0.5.3"
   }
 }
